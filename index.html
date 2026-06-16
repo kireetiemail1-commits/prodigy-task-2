@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch Application</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #111119);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .stopwatch-container {
+            background-color: #1a1a26;
+            border: 1px solid #2a2a3d;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #8f94fb;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .display {
+            font-size: 3.5rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+            font-variant-numeric: tabular-nums;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 90px;
+        }
+
+        #startBtn { background-color: #4cd137; }
+        #startBtn:hover { background-color: #44bd32; }
+
+        #pauseBtn { background-color: #fbc531; color: #000000; }
+        #pauseBtn:hover { background-color: #e1b12c; }
+
+        #lapBtn { background-color: #00a8ff; }
+        #lapBtn:hover { background-color: #0097e6; }
+
+        #resetBtn { background-color: #e84118; }
+        #resetBtn:hover { background-color: #c23616; }
+
+        button:disabled {
+            background-color: #2f3640;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+
+        .laps-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #2a2a3d;
+            padding-top: 20px;
+        }
+
+        .laps-list {
+            list-style: none;
+        }
+
+        .laps-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #222235;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #dcdde1;
+        }
+
+        .laps-list li span:first-child {
+            color: #718093;
+            font-weight: bold;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a3d;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stopwatch-container">
+        <h1>Stopwatch</h1>
+        <div class="display" id="display">00:00:00.00</div>
+        
+        <div class="controls">
+            <button id="startBtn">Start</button>
+            <button id="pauseBtn" disabled>Pause</button>
+            <button id="lapBtn" disabled>Lap</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="laps-container">
+            <ul class="laps-list" id="lapsList"></ul>
+        </div>
+    </div>
+
+    <script>
+        let startTime = 0;
+        let elapsedTime = 0;
+        let timerInterval;
+        let lapCount = 0;
+
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const lapBtn = document.getElementById('lapBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const lapsList = document.getElementById('lapsList');
+
+        function formatTime(time) {
+            let tempTime = time;
+            const ms = Math.floor((tempTime % 1000) / 10);
+            tempTime = Math.floor(tempTime / 1000);
+            const secs = tempTime % 60;
+            tempTime = Math.floor(tempTime / 60);
+            const mins = tempTime % 60;
+            const hrs = Math.floor(tempTime / 60);
+
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            startTime = Date.now() - elapsedTime;
+            timerInterval = setInterval(() => {
+                elapsedTime = Date.now() - startTime;
+                display.textContent = formatTime(elapsedTime);
+            }, 10);
+
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            lapBtn.disabled = false;
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            lapBtn.disabled = true;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            lapCount = 0;
+            display.textContent = "00:00:00.00";
+            lapsList.innerHTML = "";
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            lapBtn.disabled = true;
+        }
+
+        function recordLap() {
+            lapCount++;
+            const li = document.createElement('li');
+            li.innerHTML = `<span>Lap ${lapCount}</span> <span>${formatTime(elapsedTime)}</span>`;
+            lapsList.prepend(li);
+        }
+
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        lapBtn.addEventListener('click', recordLap);
+    </script>
+
+</body>
+</html>
